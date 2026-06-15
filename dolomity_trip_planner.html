@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dolomity 2026 - Oficjalny Niezbędnik Wyjazdowy</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter & Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Leaflet CSS for Map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        h1, h2, h3, h4 {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        .bg-mountain {
+            background-image: linear-gradient(to bottom, rgba(15, 23, 42, 0.75), rgba(15, 23, 42, 0.9)), url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1600&q=80');
+            background-size: cover;
+            background-position: center;
+        }
+        /* Custom scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        /* Map container styling */
+        #map {
+            height: 450px;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            z-index: 10;
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased selection:bg-emerald-500 selection:text-white">
+
+    <!-- Hero / Header Section -->
+    <header class="bg-mountain text-white py-16 px-4 md:py-24 relative overflow-hidden">
+        <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px]"></div>
+        <div class="max-w-6xl mx-auto text-center relative z-10">
+            <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-semibold uppercase tracking-wider mb-6 animate-pulse">
+                <i class="fa-solid fa-mountain-sun"></i> Alpejska Przygoda 2026
+            </div>
+            <h1 class="text-4xl md:text-6xl font-extrabold tracking-tight mb-4 drop-shadow-sm">
+                Kierunek: <span class="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">Dolomity</span>
+            </h1>
+            <p class="text-lg md:text-xl text-slate-300 max-w-2xl mx-auto font-light mb-8">
+                Interaktywny przewodnik, harmonogram i niezbędnik dla całej ekipy. Rower, trekking, piękne jeziora i relaks dostosowany do dzieciaków!
+            </p>
+
+            <!-- Countdown Timer -->
+            <div class="bg-slate-900/50 backdrop-blur-md inline-grid grid-cols-4 gap-4 md:gap-8 p-6 rounded-2xl border border-white/10 shadow-2xl max-w-lg mx-auto w-full">
+                <div class="text-center">
+                    <span id="days" class="block text-2xl md:text-4xl font-bold text-emerald-400">00</span>
+                    <span class="text-[10px] uppercase tracking-wider text-slate-400 font-medium">Dni</span>
+                </div>
+                <div class="text-center border-l border-white/10">
+                    <span id="hours" class="block text-2xl md:text-4xl font-bold text-emerald-400">00</span>
+                    <span class="text-[10px] uppercase tracking-wider text-slate-400 font-medium">Godziny</span>
+                </div>
+                <div class="text-center border-l border-white/10">
+                    <span id="minutes" class="block text-2xl md:text-4xl font-bold text-emerald-400">00</span>
+                    <span class="text-[10px] uppercase tracking-wider text-slate-400 font-medium">Minuty</span>
+                </div>
+                <div class="text-center border-l border-white/10">
+                    <span id="seconds" class="block text-2xl md:text-4xl font-bold text-emerald-400">00</span>
+                    <span class="text-[10px] uppercase tracking-wider text-slate-400 font-medium">Sekundy</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation Quick-Links & Global Config -->
+    <section class="max-w-6xl mx-auto px-4 -mt-8 relative z-20">
+        <div class="bg-white rounded-xl shadow-xl p-4 md:p-6 grid grid-cols-2 md:grid-cols-4 gap-4 border border-slate-100">
+            <div class="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-lg transition-colors">
+                <div class="w-10 h-10 bg-emerald-50 rounded-lg flex items-center justify-center text-emerald-600">
+                    <i class="fa-solid fa-calendar-day text-lg"></i>
+                </div>
+                <div>
+                    <span class="text-xs text-slate-400 block font-medium">Termin startu</span>
+                    <input type="date" id="tripStartDate" value="2026-07-15" class="text-sm font-semibold text-slate-700 bg-transparent border-none p-0 focus:ring-0 cursor-pointer" onchange="updateTripDates()">
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-lg transition-colors">
+                <div class="w-10 h-10 bg-blue-55 rounded-lg flex items-center justify-center text-blue-600 bg-blue-50">
+                    <i class="fa-solid fa-users text-lg"></i>
+                </div>
+                <div>
+                    <span class="text-xs text-slate-400 block font-medium">Ekipa</span>
+                    <span class="text-sm font-semibold text-slate-700">Dorośli + Dzieci</span>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-lg transition-colors">
+                <div class="w-10 h-10 bg-amber-50 rounded-lg flex items-center justify-center text-amber-600">
+                    <i class="fa-solid fa-cloud-sun text-lg"></i>
+                </div>
+                <div>
+                    <span class="text-xs text-slate-400 block font-medium">Pogoda</span>
+                    <a href="https://www.bergfex.com/it/suedtirol/wetter/" target="_blank" class="text-sm font-semibold text-emerald-600 hover:underline flex items-center gap-1">
+                        Sprawdź Dolomity <i class="fa-solid fa-up-right-from-square text-[10px]"></i>
+                    </a>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-lg transition-colors">
+                <div class="w-10 h-10 bg-red-55 rounded-lg flex items-center justify-center text-red-600 bg-red-50">
+                    <i class="fa-solid fa-house-medical text-lg"></i>
+                </div>
+                <div>
+                    <span class="text-xs text-slate-400 block font-medium">Numer alarmowy</span>
+                    <span class="text-sm font-bold text-red-600">112 (oraz 118 górskie)</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content Grid -->
+    <main class="max-w-6xl mx-auto px-4 py-12 grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- Left Side: Interactive Map & Essential Widgets -->
+        <section class="lg:col-span-5 order-2 lg:order-1 space-y-8">
+            
+            <!-- Map Card -->
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 space-y-4">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                        <i class="fa-solid fa-map-location-dot text-emerald-500"></i> Mapa Naszych Przygód
+                    </h2>
+                    <span class="text-xs bg-slate-100 text-slate-600 py-1 px-2.5 rounded-full font-medium">Kliknij dzień, by przybliżyć</span>
+                </div>
+                <div id="map"></div>
+                <p class="text-xs text-slate-400 italic text-center">
+                    Kliknij na piny na mapie, aby zobaczyć przypisany dzień wyjazdu i szczegóły.
+                </p>
+            </div>
+
+            <!-- Motivational Corner for Kids -->
+            <div class="bg-gradient-to-br from-amber-50 to-orange-50 p-6 rounded-2xl shadow-sm border border-amber-100 space-y-4">
+                <div class="flex items-center gap-3">
+                    <span class="text-3xl">🏆</span>
+                    <div>
+                        <h3 class="font-bold text-amber-950 text-base">Strefa Młodego Odkrywcy</h3>
+                        <p class="text-xs text-amber-700">Zadania i nagrody za odwagę i uśmiech na szlaku!</p>
+                    </div>
+                </div>
+                
+                <div class="space-y-3 pt-2">
+                    <div class="flex justify-between items-start gap-4 p-3 bg-white/80 rounded-xl border border-amber-200/50">
+                        <div class="flex gap-2.5">
+                            <span class="text-xl">🎒</span>
+                            <div>
+                                <h4 class="text-xs font-bold text-slate-800">Mały Pomocnik (Codziennie)</h4>
+                                <p class="text-[11px] text-slate-500">Spakowanie własnego małego plecaczka na wycieczkę.</p>
+                            </div>
+                        </div>
+                        <span class="text-xs bg-amber-100 text-amber-800 font-semibold px-2 py-0.5 rounded-full">10 pkt</span>
+                    </div>
+
+                    <div class="flex justify-between items-start gap-4 p-3 bg-white/80 rounded-xl border border-amber-200/50">
+                        <div class="flex gap-2.5">
+                            <span class="text-xl">⏰</span>
+                            <div>
+                                <h4 class="text-xs font-bold text-slate-800">Poranny Ninja (Dzień 8)</h4>
+                                <p class="text-[11px] text-slate-500">Wstanie bez marudzenia przed 7:00 na Lago di Sorapis!</p>
+                            </div>
+                        </div>
+                        <span class="text-xs bg-amber-100 text-amber-800 font-semibold px-2 py-0.5 rounded-full">50 pkt</span>
+                    </div>
+
+                    <div class="flex justify-between items-start gap-4 p-3 bg-white/80 rounded-xl border border-amber-200/50">
+                        <div class="flex gap-2.5">
+                            <span class="text-xl">🥾</span>
+                            <div>
+                                <h4 class="text-xs font-bold text-slate-800">Zdobywca Secedy (Dzień 6)</h4>
+                                <p class="text-[11px] text-slate-500">Zrobienie pętli i uśmiechnięta fotka z widokiem na iglice.</p>
+                            </div>
+                        </div>
+                        <span class="text-xs bg-amber-100 text-amber-800 font-semibold px-2 py-0.5 rounded-full">30 pkt</span>
+                    </div>
+                </div>
+
+                <div class="bg-amber-600/10 p-3 rounded-xl border border-amber-600/20 text-center">
+                    <p class="text-xs font-bold text-amber-900">🎁 Główna Nagroda dla Dzieciaków:</p>
+                    <p class="text-[11px] text-amber-800 mt-1">Giga puchar lodowy w Cortina d'Ampezzo (Dzień 9) oraz miano "Dolomitowego Wojownika"!</p>
+                </div>
+            </div>
+
+            <!-- Essential Guidelines & Safety -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 space-y-4">
+                <h3 class="font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-triangle-exclamation text-amber-500"></i> Ważne Zasady Wyjazdowe
+                </h3>
+                <ul class="space-y-3 text-xs text-slate-600">
+                    <li class="flex gap-2">
+                        <span class="text-emerald-500"><i class="fa-solid fa-circle-check"></i></span>
+                        <span><strong>Tempo dostosowane do najsłabszych:</strong> Pamiętamy o dzieciach! Odpuszczamy, gdy brakuje sił. Góry poczekają.</span>
+                    </li>
+                    <li class="flex gap-2">
+                        <span class="text-emerald-500"><i class="fa-solid fa-circle-check"></i></span>
+                        <span><strong>Warunki pogodowe:</strong> Plany mogą ulec zmianie w przypadku ulewy lub burzy (szczególnie Tre Cime i Sorapis).</span>
+                    </li>
+                    <li class="flex gap-2">
+                        <span class="text-emerald-500"><i class="fa-solid fa-circle-check"></i></span>
+                        <span><strong>Gotówka:</strong> Warto mieć euro w gotówce (np. wstęp na stawy w Dobbiaco 5€/osoba, schroniska, parkingi).</span>
+                    </li>
+                    <li class="flex gap-2">
+                        <span class="text-emerald-500"><i class="fa-solid fa-circle-check"></i></span>
+                        <span><strong>Rower:</strong> Obowiązkowe kaski dla każdego, zwłaszcza na zjazdach z Lago di Braies i trasie do Cortiny.</span>
+                    </li>
+                </ul>
+            </div>
+
+        </section>
+
+        <!-- Right Side: Beautiful Interactive Itinerary Timeline -->
+        <section class="lg:col-span-7 order-1 lg:order-2 space-y-6">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Harmonogram Dzień po Dniu</h2>
+                    <p class="text-sm text-slate-500">Klikaj karty, by podświetlić trasę na mapie</p>
+                </div>
+                <!-- Filter Badges -->
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="filterDays('all')" class="filter-btn active text-xs font-medium px-3 py-1.5 rounded-full bg-slate-900 text-white transition-all">Wszystko</button>
+                    <button onclick="filterDays('hike')" class="filter-btn text-xs font-medium px-3 py-1.5 rounded-full bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition-all">🥾 Trekking</button>
+                    <button onclick="filterDays('bike')" class="filter-btn text-xs font-medium px-3 py-1.5 rounded-full bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition-all">🚲 Rower</button>
+                    <button onclick="filterDays('relax')" class="filter-btn text-xs font-medium px-3 py-1.5 rounded-full bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition-all">⛱️ Relaks</button>
+                </div>
+            </div>
+
+            <!-- Day Timeline -->
+            <div class="space-y-6 relative before:absolute before:inset-0 before:right-auto before:left-4 md:before:left-6 before:w-0.5 before:bg-slate-200 before:content-['']">
+                
+                <!-- Dzień 1 -->
+                <div class="day-card relative pl-12 md:pl-16 transition-all duration-300" data-type="relax" id="day-1-anchor">
+                    <div onclick="focusMap(46.7329, 12.2798, 12, 1)" class="cursor-pointer group bg-white hover:bg-slate-50 p-5 md:p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col gap-4 relative transition-all hover:shadow-md">
+                        <!-- Left Dot -->
+                        <span class="absolute left-[-32px] md:left-[-46px] top-6 w-5 h-5 md:w-6 md:h-6 rounded-full bg-slate-200 border-4 border-white flex items-center justify-center text-slate-600 text-[10px] font-bold z-10 group-hover:bg-slate-900 group-hover:text-white transition-colors">1</span>
+                        
+                        <div class="flex flex-wrap justify-between items-start gap-2">
+                            <div>
+                                <span class="text-xs font-bold text-slate-400 tracking-wider uppercase dynamic-day-name" data-day-offset="0">Dzień 1</span>
+                                <h3 class="text-lg font-bold text-slate-900 group-hover:text-emerald-600 transition-colors">Przyjazd i Zakwaterowanie</h3>
+                            </div>
+                            <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700">Relaks / Integracja</span>
+                        </div>
+                        <p class="text-sm text-slate-600 leading-relaxed">
+                            Przyjazd na miejsce, rozpakowanie bagaży, ogarnięcie przestrzeni mieszkalnej i wspólny wieczór zapoznawczo-planistyczny przy lokalnym włoskim winie lub piwie.
+                        </p>
+                        <div class="flex flex-wrap gap-2 text-xs text-slate-500 border-t border-slate-100 pt-3">
+                            <span class="flex items-center gap-1"><i class="fa-solid fa-hotel"></i> Zakwaterowanie</span>
+                            <span class="flex items-center gap-1"><i class="fa-solid fa-beer-mug-empty"></i> Luźny wieczór</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dzień 2 -->
+                <div class="day-card relative pl-12 md:pl-16 transition-all duration-300" data-type="bike" id="day-2-anchor">
+                    <div onclick="focusMap(46.6943, 12.0847, 13, 2)" class="cursor-pointer group bg-white hover:bg-slate-50 p-5 md:p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col gap-4 relative transition-all hover:shadow-md">
+                        <span class="absolute left-[-32px] md:left-[-46px] top-6 w-5 h-5 md:w-6 md:h-6 rounded-full bg-slate-200 border-4 border-white flex items-center justify-center text-slate-600 text-[10px] font-bold z-10 group-hover:bg-slate-900 group-hover:text-white transition-colors">2</span>
+                        
+                        <div class="flex flex-wrap justify-between items-start gap-2">
+                            <div>
+                                <span class="text-xs font-bold text-slate-400 tracking-wider uppercase dynamic-day-name" data-day-offset="1">Dzień 2</span>
+                                <h3 class="text-lg font-bold text-slate-900 group-hover:text-emerald-600 transition-colors">Lago di Braies Rowerem & Festiwal</h3>
+                            </div>
+                            <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700">Trasa Rowerowa + Spacer</span>
+                        </div>
+                        <p class="text-sm text-slate-600 leading-relaxed">
+                            Ruszamy rowerami nad jedno z najpiękniejszych jezior Dolomitów – <strong>Lago di Braies (21 km)</strong>. Na miejscu opcja wynajęcia uroczej drewnianej łódki lub spokojny spacer wokół jeziora (ok. 2h, na tyle ile starczy sił). 
+                        </p>
+                        <div class="bg-indigo-50/50 p-3 rounded-xl border border-indigo-100 text-xs text-indigo-900">
+                            <strong>Wieczorna atrakcja:</strong> Od 17:30 do 22:00 ruszamy na lokalny festiwal w miasteczku – <strong>Dolomythos Summer Fest</strong>! Lokalne jedzenie, muzyka i świetny klimat.
+                        </div>
+                        <div class="flex flex-wrap gap-2 text-xs text-slate-500 border-t border-slate-100 pt-3">
+                            <span class="flex items-center gap-1 text-emerald-600 font-medium"><i class="fa-solid fa-bicycle"></i> 21 km</span>
+                            <span class="flex items-center gap-1"><i class="fa-solid fa-person-hiking"></i> 2h wokół jeziora</span>
+                            <span class="flex items-center gap-1 text-indigo-600 font-medium"><i class="fa-solid fa-champagne-glasses"></i> Dolomythos Fest</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dzień 3 -->
+                <div class="day-card relative pl-12 md:pl-16 transition-all duration-300" data-type="hike" id="day-3-anchor">
+                    <div onclick="focusMap(46.6125, 12.2952, 13, 3)" class="cursor-pointer group bg-white hover:bg-slate-50 p-5 md:p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col gap-4 relative transition-all hover:shadow-md">
+                        <span class="absolute left-[-32px] md:left-[-46px] top-6 w-5 h-5 md:w-6 md:h-6 rounded-full bg-slate-200 border-4 border-white flex items-center justify-center text-slate-600 text-[10px] font-bold z-10 group-hover:bg-slate-900 group-hover:text-white transition-colors">3</span>
+                        
+                        <div class="flex flex-wrap justify-between items-start gap-2">
+                            <div>
+                                <span class="text-xs font-bold text-slate-400 tracking-wider uppercase dynamic-day-name" data-day-offset="2">Dzień 3</span>
+                                <h3 class="text-lg font-bold text-slate-900 group-hover:text-emerald-600 transition-colors">Tre Cime & Cadini di Misurina</h3>
+                            </div>
+                            <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700">Średni / Trudny Hike</span>
+                        </div>
+                        <p class="text-sm text-slate-600 leading-relaxed">
+                            Ikona Dolomitów! Długi, malowniczy trekking wokół <strong>Tre Cime di Lavaredo (ok. 10 km)</strong>. Dodatkowo podejdziemy na widowiskowy punkt widokowy <strong>Cadini di Misurina</strong> (krótki odcinek, ok. 30-45 minut). Po trekkingu zjeżdżamy do klimatycznego miasteczka Misurina nad jeziorem na zasłużony obiad.
+                        </p>
+                        <div class="bg-amber-50 p-3 rounded-xl border border-amber-200 text-xs text-amber-900">
+                            🚨 <strong>Opcja awaryjna dla zmęczonych (Ika, Adam, Judi):</strong> W razie ubytku sił na Tre Cime, spokojny relaks nad jeziorem Misurina zamiast pełnej pętli.
+                        </div>
+                        <div class="flex flex-wrap gap-2 text-xs text-slate-500 border-t border-slate-100 pt-3">
+                            <span class="flex items-center gap-1 text-amber-700 font-medium"><i class="fa-solid fa-shoe-prints"></i> 10 km trekking</span>
+                            <span class="flex items-center gap-1"><i class="fa-solid fa-clock"></i> Łącznie ok. 4-5h</span>
+                            <span class="flex items-center gap-1"><i class="fa-solid fa-utensils"></i> Obiad w Misurina</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dzień 4 i 5 -->
+                <div class="day-card relative pl-12 md:pl-16 transition-all duration-300" data-type="bike" id="day-4-anchor">
+                    <div onclick="focusMap(46.7231, 12.2183, 12, 4)" class="cursor-pointer group bg-white hover:bg-slate-50 p-5 md:p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col gap-4 relative transition-all hover:shadow-md">
+                        <span class="absolute left-[-32px] md:left-[-46px] top-6 w-5 h-5 md:w-6 md:h-6 rounded-full bg-slate-200 border-4 border-white flex items-center justify-center text-slate-600 text-[10px] font-bold z-10 group-hover:bg-slate-900 group-hover:text-white transition-colors">4+5</span>
+                        
+                        <div class="flex flex-wrap justify-between items-start gap-2">
+                            <div>
+                                <span class="text-xs font-bold text-slate-400 tracking-wider uppercase dynamic-day-name" data-day-offset="3">Weekend</span>
+                                <h3 class="text-lg font-bold text-slate-900 group-hover:text-emerald-600 transition-colors">Lago di Dobbiaco, Prato Piazza lub Lienz</h3>
+                            </div>
+                            <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700">Elastyczny Weekend</span>
+                        </div>
+                        <p class="text-sm text-slate-600 leading-relaxed">
+                            Weekend pełen opcji! Wycieczka rowerowa nad malownicze <strong>Lago di Dobbiaco</strong>, piknik, relaksik i krótki spacer wokół (ok. 45 min). Popołudniu możemy podskoczyć na zielone łąki <strong>Prato Piazza</strong> (wjazd autem możliwy po 16:00 z Ponticello, łagodny trekking do schroniska, mało turystycznie i spokojnie).
+                        </p>
+                        <div class="bg-emerald-50 p-3 rounded-xl border border-emerald-200 text-xs text-slate-700">
+                            💡 <strong>Super Alternatywa:</strong> Możemy zamienić jeden z tych dni na słynną rodzinną wycieczkę rowerową zjazdową do austriackiego <strong>Lienz</strong> i wygodny powrót pociągiem z rowerami.
+                        </div>
+                        <div class="flex flex-wrap gap-2 text-xs text-slate-500 border-t border-slate-100 pt-3">
+                            <span class="flex items-center gap-1"><i class="fa-solid fa-basket-shopping"></i> Piknik</span>
+                            <span class="flex items-center gap-1 text-emerald-600 font-medium"><i class="fa-solid fa-bicycle"></i> Opcja Lienz</span>
+                            <span class="flex items-center gap-1 text-amber-600 font-semibold"><i class="fa-solid fa-baby"></i> Pamiętamy o dzieciach!</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dzień 6 -->
+                <div class="day-card relative pl-12 md:pl-16 transition-all duration-300" data-type="hike" id="day-6-anchor">
+                    <div onclick="focusMap(46.5982, 11.7247, 13, 6)" class="cursor-pointer group bg-white hover:bg-slate-50 p-5 md:p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col gap-4 relative transition-all hover:shadow-md">
+                        <span class="absolute left-[-32px] md:left-[-46px] top-6 w-5 h-5 md:w-6 md:h-6 rounded-full bg-slate-200 border-4 border-white flex items-center justify-center text-slate-600 text-[10px] font-bold z-10 group-hover:bg-slate-900 group-hover:text-white transition-colors">6</span>
+                        
+                        <div class="flex flex-wrap justify-between items-start gap-2">
+                            <div>
+                                <span class="text-xs font-bold text-slate-400 tracking-wider uppercase dynamic-day-name" data-day-offset="5">Dzień 6</span>
+                                <h3 class="text-lg font-bold text-slate-900 group-hover:text-emerald-600 transition-colors">Seceda, Ortisei & Alpe di Siusi</h3>
+                            </div>
+                            <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700">Całodniowy Wyjazd panoramiczny</span>
+                        </div>
+                        <p class="text-sm text-slate-600 leading-relaxed">
+                            Zaczynamy od wjazdu kolejką <strong>Col Raiser</strong>. Kierujemy się na spektakularne klify <strong>Seceda</strong>, trzymając się lewej strony, robiąc piękną widokowo pętlę z powrotem do kolejki. Po drodze odwiedzamy przytulne schronisko na odpoczynek i kapitalne zdjęcia. 
+                        </p>
+                        <div class="bg-rose-50 p-3 rounded-xl border border-rose-100 text-xs text-rose-900">
+                            🧸 <strong>Uwaga rodzicielska:</strong> Trasa jest widokowa i łatwo ją skrócić. Dbamy o to, by nie zamęczyć dzieci. Na koniec dnia zjeżdżamy do Ortisei i kierujemy się na rozległe, zielone hale <strong>Alpe di Siusi</strong> na kolację i zachwycające widoki.
+                        </div>
+                        <div class="flex flex-wrap gap-2 text-xs text-slate-500 border-t border-slate-100 pt-3">
+                            <span class="flex items-center gap-1"><i class="fa-solid fa-cable-car"></i> Kolejka Col Raiser</span>
+                            <span class="flex items-center gap-1"><i class="fa-solid fa-camera"></i> Pocztówkowe kadry</span>
+                            <span class="flex items-center gap-1 text-emerald-600 font-medium"><i class="fa-solid fa-pizza-slice"></i> Alpe di Siusi</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dzień 7 -->
+                <div class="day-card relative pl-12 md:pl-16 transition-all duration-300" data-type="relax" id="day-7-anchor">
+                    <div onclick="focusMap(46.7231, 12.2183, 13, 7)" class="cursor-pointer group bg-white hover:bg-slate-50 p-5 md:p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col gap-4 relative transition-all hover:shadow-md">
+                        <span class="absolute left-[-32px] md:left-[-46px] top-6 w-5 h-5 md:w-6 md:h-6 rounded-full bg-slate-200 border-4 border-white flex items-center justify-center text-slate-600 text-[10px] font-bold z-10 group-hover:bg-slate-900 group-hover:text-white transition-colors">7</span>
+                        
+                        <div class="flex flex-wrap justify-between items-start gap-2">
+                            <div>
+                                <span class="text-xs font-bold text-slate-400 tracking-wider uppercase dynamic-day-name" data-day-offset="6">Dzień 7</span>
+                                <h3 class="text-lg font-bold text-slate-900 group-hover:text-emerald-600 transition-colors">Kąpieliska i Chillout w Dobbiaco</h3>
+                            </div>
+                            <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-sky-50 text-sky-700">Dzień Regeneracji</span>
+                        </div>
+                        <p class="text-sm text-slate-600 leading-relaxed">
+                            Po intensywnych wędrówkach czas na pełen relaks dla całej ekipy. Do wyboru ponowna krótka przejażdżka rowerowa wokół <strong>Lago di Dobbiaco</strong> albo fantastyczne, czyste <strong>stawy kąpielowe w Dobbiaco</strong>. Świetne zaplecze gastronomiczne, bezpieczna woda dla dzieci i super cena (jedynie 5€ za cały dzień!).
+                        </p>
+                        <div class="flex flex-wrap gap-2 text-xs text-slate-500 border-t border-slate-100 pt-3">
+                            <span class="flex items-center gap-1 text-sky-600 font-medium"><i class="fa-solid fa-water"></i> Stawy kąpielowe</span>
+                            <span class="flex items-center gap-1"><i class="fa-solid fa-coins"></i> 5€ / os.</span>
+                            <span class="flex items-center gap-1"><i class="fa-solid fa-ice-cream"></i> Pełen luz</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dzień 8 -->
+                <div class="day-card relative pl-12 md:pl-16 transition-all duration-300" data-type="hike" id="day-8-anchor">
+                    <div onclick="focusMap(46.5559, 12.1673, 13, 8)" class="cursor-pointer group bg-white hover:bg-slate-50 p-5 md:p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col gap-4 relative transition-all hover:shadow-md">
+                        <span class="absolute left-[-32px] md:left-[-46px] top-6 w-5 h-5 md:w-6 md:h-6 rounded-full bg-slate-200 border-4 border-white flex items-center justify-center text-slate-600 text-[10px] font-bold z-10 group-hover:bg-slate-900 group-hover:text-white transition-colors">8</span>
+                        
+                        <div class="flex flex-wrap justify-between items-start gap-2">
+                            <div>
+                                <span class="text-xs font-bold text-slate-400 tracking-wider uppercase dynamic-day-name" data-day-offset="7">Dzień 8</span>
+                                <h3 class="text-lg font-bold text-slate-900 group-hover:text-emerald-600 transition-colors">Turkusowe Lago di Sorapis</h3>
+                            </div>
+                            <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700">Trekking rano</span>
+                        </div>
+                        <p class="text-sm text-slate-600 leading-relaxed">
+                            Jedno z najbardziej zjawiskowych, mleczno-turkusowych jezior. Szlak jest popularny, więc <strong>musimy ruszyć rano (najlepiej przed 7:00!)</strong>. Startujemy z Passo Tre Croci (ok. 40 minut jazdy od naszej bazy) i wybieramy bezpieczny, urokliwy <strong>szlak nr 215</strong>. Przy jeziorze znajduje się schronisko <strong>Rifugio Vandelli</strong>, w którym dzieci odpoczną i zjedzą pyszne ciasto.
+                        </p>
+                        <div class="bg-amber-50 p-3 rounded-xl border border-amber-200 text-xs text-amber-900">
+                            🍽️ <strong>Zasłużona nagroda obiadowa:</strong> Po zejściu idziemy na rewelacyjny obiad w karczmie <strong>Baita Son Zuogo</strong> na Passo Tre Croci (ok. 150-200m w kierunku ekskluzywnej Cortiny d’Ampezzo).
+                        </div>
+                        <div class="flex flex-wrap gap-2 text-xs text-slate-500 border-t border-slate-100 pt-3">
+                            <span class="flex items-center gap-1 text-rose-600 font-bold"><i class="fa-solid fa-clock"></i> Start przed 07:00!</span>
+                            <span class="flex items-center gap-1"><i class="fa-solid fa-mountain"></i> Szlak 215</span>
+                            <span class="flex items-center gap-1 text-emerald-600 font-medium"><i class="fa-solid fa-utensils"></i> Baita Son Zuogo</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dzień 9 -->
+                <div class="day-card relative pl-12 md:pl-16 transition-all duration-300" data-type="bike" id="day-9-anchor">
+                    <div onclick="focusMap(46.7329, 12.2798, 11, 9)" class="cursor-pointer group bg-white hover:bg-slate-50 p-5 md:p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col gap-4 relative transition-all hover:shadow-md">
+                        <span class="absolute left-[-32px] md:left-[-46px] top-6 w-5 h-5 md:w-6 md:h-6 rounded-full bg-slate-200 border-4 border-white flex items-center justify-center text-slate-600 text-[10px] font-bold z-10 group-hover:bg-slate-900 group-hover:text-white transition-colors">9</span>
+                        
+                        <div class="flex flex-wrap justify-between items-start gap-2">
+                            <div>
+                                <span class="text-xs font-bold text-slate-400 tracking-wider uppercase dynamic-day-name" data-day-offset="8">Dzień 9</span>
+                                <h3 class="text-lg font-bold text-slate-900 group-hover:text-emerald-600 transition-colors">Rowerem przez Dolomity do Cortiny</h3>
+                            </div>
+                            <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700">Piękna Trasa Rowerowa</span>
+                        </div>
+                        <p class="text-sm text-slate-600 leading-relaxed">
+                            Niesamowita, widokowa wycieczka rowerowa kultową, bezpieczną trasą <strong>Lunga via delle Dolomiti</strong>. Pokonujemy odcinek ze startu w <strong>San Candido aż do Cortina d’Ampezzo</strong>. Na miejscu w Cortinie czeka nas przyjemny spacer deptakiem, obiad, pyszne lody w nagrodę dla dzieciaków i spokojny powrót do bazy na odpoczynek i pakowanie przed powrotem do Polski.
+                        </p>
+                        <div class="flex flex-wrap gap-2 text-xs text-slate-500 border-t border-slate-100 pt-3">
+                            <span class="flex items-center gap-1 text-emerald-600 font-medium"><i class="fa-solid fa-route"></i> Lunga via delle Dolomiti</span>
+                            <span class="flex items-center gap-1"><i class="fa-solid fa-city"></i> Spacer Cortina</span>
+                            <span class="flex items-center gap-1"><i class="fa-solid fa-suitcase"></i> Wieczorne pakowanie</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Interactive Packing List Section (Saves to LocalStorage) -->
+    <section class="bg-slate-900 text-white py-16 px-4">
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center max-w-2xl mx-auto mb-12">
+                <span class="text-emerald-400 text-xs font-bold uppercase tracking-wider block mb-2">Praktyczne Przygotowanie</span>
+                <h2 class="text-3xl font-extrabold tracking-tight">Interaktywna Lista Rzeczy do Spakowania</h2>
+                <p class="text-sm text-slate-400 mt-2">Zaznacz spakowane przedmioty. Lista zapamiętuje Twoje wybory na tym urządzeniu!</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Kategoria 1 -->
+                <div class="bg-slate-800/50 border border-slate-800 p-5 rounded-2xl">
+                    <h3 class="font-bold text-emerald-400 flex items-center gap-2 mb-4 text-sm">
+                        <i class="fa-solid fa-shoe-prints"></i> Na górskie szlaki
+                    </h3>
+                    <ul class="space-y-3 text-xs" id="pack-gory">
+                        <li class="flex items-start gap-2 cursor-pointer" onclick="togglePackItem(this)">
+                            <input type="checkbox" class="mt-0.5 rounded border-slate-700 bg-transparent text-emerald-500 focus:ring-emerald-500" id="g1">
+                            <label for="g1" class="cursor-pointer text-slate-300">Buty trekkingowe (rozchodzone!)</label>
+                        </li>
+                        <li class="flex items-start gap-2 cursor-pointer" onclick="togglePackItem(this)">
+                            <input type="checkbox" class="mt-0.5 rounded border-slate-700 bg-transparent text-emerald-500 focus:ring-emerald-500" id="g2">
+                            <label for="g2" class="cursor-pointer text-slate-300">Kurtka membranowa / deszczak</label>
+                        </li>
+                        <li class="flex items-start gap-2 cursor-pointer" onclick="togglePackItem(this)">
+                            <input type="checkbox" class="mt-0.5 rounded border-slate-700 bg-transparent text-emerald-500 focus:ring-emerald-500" id="g3">
+                            <label for="g3" class="cursor-pointer text-slate-300">Plecak 20-30L z pokrowcem</label>
+                        </li>
+                        <li class="flex items-start gap-2 cursor-pointer" onclick="togglePackItem(this)">
+                            <input type="checkbox" class="mt-0.5 rounded border-slate-700 bg-transparent text-emerald-500 focus:ring-emerald-500" id="g4">
+                            <label for="g4" class="cursor-pointer text-slate-300">Czołówka lub latarka</label>
+                        </li>
+                        <li class="flex items-start gap-2 cursor-pointer" onclick="togglePackItem(this)">
+                            <input type="checkbox" class="mt-0.5 rounded border-slate-700 bg-transparent text-emerald-500 focus:ring-emerald-500" id="g5">
+                            <label for="g5" class="cursor-pointer text-slate-300">Butelka termiczna / termos</label>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Kategoria 2 -->
+                <div class="bg-slate-800/50 border border-slate-800 p-5 rounded-2xl">
+                    <h3 class="font-bold text-sky-400 flex items-center gap-2 mb-4 text-sm">
+                        <i class="fa-solid fa-bicycle"></i> Na wyprawy rowerowe
+                    </h3>
+                    <ul class="space-y-3 text-xs" id="pack-rower">
+                        <li class="flex items-start gap-2 cursor-pointer" onclick="togglePackItem(this)">
+                            <input type="checkbox" class="mt-0.5 rounded border-slate-700 bg-transparent text-sky-500 focus:ring-sky-500" id="r1">
+                            <label for="r1" class="cursor-pointer text-slate-300">Kask rowerowy (obowiązkowy!)</label>
+                        </li>
+                        <li class="flex items-start gap-2 cursor-pointer" onclick="togglePackItem(this)">
+                            <input type="checkbox" class="mt-0.5 rounded border-slate-700 bg-transparent text-sky-500 focus:ring-sky-500" id="r2">
+                            <label for="r2" class="cursor-pointer text-slate-300">Okulary przeciwsłoneczne</label>
+                        </li>
+                        <li class="flex items-start gap-2 cursor-pointer" onclick="togglePackItem(this)">
+                            <input type="checkbox" class="mt-0.5 rounded border-slate-700 bg-transparent text-sky-500 focus:ring-sky-500" id="r3">
+                            <label for="r3" class="cursor-pointer text-slate-300">Spodenki z wkładką żelową</label>
+                        </li>
+                        <li class="flex items-start gap-2 cursor-pointer" onclick="togglePackItem(this)">
+                            <input type="checkbox" class="mt-0.5 rounded border-slate-700 bg-transparent text-sky-500 focus:ring-sky-500" id="r4">
+                            <label for="r4" class="cursor-pointer text-slate-300">Bidon na wodę</label>
+                        </li>
+                        <li class="flex items-start gap-2 cursor-pointer" onclick="togglePackItem(this)">
+                            <input type="checkbox" class="mt-0.5 rounded border-slate-700 bg-transparent text-sky-500 focus:ring-sky-500" id="r5">
+                            <label for="r5" class="cursor-pointer text-slate-300">Mały multitool rowerowy</label>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Kategoria 3 -->
+                <div class="bg-slate-800/50 border border-slate-800 p-5 rounded-2xl">
+                    <h3 class="font-bold text-amber-400 flex items-center gap-2 mb-4 text-sm">
+                        <i class="fa-solid fa-baby-carriage"></i> Dla dzieciaków
+                    </h3>
+                    <ul class="space-y-3 text-xs" id="pack-dzieci">
+                        <li class="flex items-start gap-2 cursor-pointer" onclick="togglePackItem(this)">
+                            <input type="checkbox" class="mt-0.5 rounded border-slate-700 bg-transparent text-amber-500 focus:ring-amber-500" id="d1">
+                            <label for="d1" class="cursor-pointer text-slate-300">Wygodny, mały plecaczek</label>
+                        </li>
+                        <li class="flex items-start gap-2 cursor-pointer" onclick="togglePackItem(this)">
+                            <input type="checkbox" class="mt-0.5 rounded border-slate-700 bg-transparent text-amber-500 focus:ring-amber-500" id="d2">
+                            <label for="d2" class="cursor-pointer text-slate-300">Przekąski i żelki motywacyjne</label>
+                        </li>
+                        <li class="flex items-start gap-2 cursor-pointer" onclick="togglePackItem(this)">
+                            <input type="checkbox" class="mt-0.5 rounded border-slate-700 bg-transparent text-amber-500 focus:ring-amber-500" id="d3">
+                            <label for="d3" class="cursor-pointer text-slate-300">Plastry z kolorowymi wzorami</label>
+                        </li>
+                        <li class="flex items-start gap-2 cursor-pointer" onclick="togglePackItem(this)">
+                            <input type="checkbox" class="mt-0.5 rounded border-slate-700 bg-transparent text-amber-500 focus:ring-amber-500" id="d4">
+                            <label for="d4" class="cursor-pointer text-slate-300">Kurtka wiatroszczelna + czapka</label>
+                        </li>
+                        <li class="flex items-start gap-2 cursor-pointer" onclick="togglePackItem(this)">
+                            <input type="checkbox" class="mt-0.5 rounded border-slate-700 bg-transparent text-amber-500 focus:ring-amber-500" id="d5">
+                            <label for="d5" class="cursor-pointer text-slate-300">Krem z wysokim filtrem UV</label>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Kategoria 4 -->
+                <div class="bg-slate-800/50 border border-slate-800 p-5 rounded-2xl">
+                    <h3 class="font-bold text-rose-400 flex items-center gap-2 mb-4 text-sm">
+                        <i class="fa-solid fa-suitcase"></i> Niezbędne i apteczka
+                    </h3>
+                    <ul class="space-y-3 text-xs" id="pack-inne">
+                        <li class="flex items-start gap-2 cursor-pointer" onclick="togglePackItem(this)">
+                            <input type="checkbox" class="mt-0.5 rounded border-slate-700 bg-transparent text-rose-500 focus:ring-rose-500" id="i1">
+                            <label for="i1" class="cursor-pointer text-slate-300">Dowód / paszport + karta EKUZ</label>
+                        </li>
+                        <li class="flex items-start gap-2 cursor-pointer" onclick="togglePackItem(this)">
+                            <input type="checkbox" class="mt-0.5 rounded border-slate-700 bg-transparent text-rose-500 focus:ring-rose-500" id="i2">
+                            <label for="i2" class="cursor-pointer text-slate-300">Ubezpieczenie turystyczne górskie</label>
+                        </li>
+                        <li class="flex items-start gap-2 cursor-pointer" onclick="togglePackItem(this)">
+                            <input type="checkbox" class="mt-0.5 rounded border-slate-700 bg-transparent text-rose-500 focus:ring-rose-500" id="i3">
+                            <label for="i3" class="cursor-pointer text-slate-300">Gotówka w euro (monety na parkingi)</label>
+                        </li>
+                        <li class="flex items-start gap-2 cursor-pointer" onclick="togglePackItem(this)">
+                            <input type="checkbox" class="mt-0.5 rounded border-slate-700 bg-transparent text-rose-500 focus:ring-rose-500" id="i4">
+                            <label for="i4" class="cursor-pointer text-slate-300">Środek na komary i kleszcze</label>
+                        </li>
+                        <li class="flex items-start gap-2 cursor-pointer" onclick="togglePackItem(this)">
+                            <input type="checkbox" class="mt-0.5 rounded border-slate-700 bg-transparent text-rose-500 focus:ring-rose-500" id="i5">
+                            <label for="i5" class="cursor-pointer text-slate-300">Powerbank + kable zasilające</label>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-slate-950 text-slate-500 py-8 px-4 text-center text-xs border-t border-slate-900">
+        <p>© 2026 Dolomites Trip Portal. Strona stworzona na wzór azja.brzezinka.eu dla uczestników wyjazdu.</p>
+        <p class="mt-1">Pamiętaj: Bezpieczeństwo i uśmiech dzieciaków to cel numer jeden!</p>
+    </footer>
+
+    <!-- Leaflet.js Map script -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+        // Set up the Leaflet map centered around Dolomites
+        let map;
+        let markers = {};
+
+        function initMap() {
+            // Dolomites Center coordinates
+            const doloCenter = [46.66, 12.15];
+            map = L.map('map', {
+                scrollWheelZoom: false
+            }).setView(doloCenter, 10);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(map);
+
+            // Coordinates for important day destinations
+            const destinations = [
+                { id: 1, name: "Zakwaterowanie (Dobbiaco / San Candido)", coords: [46.7329, 12.2798], desc: "Nasza baza wypadowa" },
+                { id: 2, name: "Lago di Braies", coords: [46.6943, 12.0847], desc: "Trasa rowerowa 21km & urocze łódki" },
+                { id: 3, name: "Tre Cime & Cadini di Misurina", coords: [46.6125, 12.2952], desc: "Kultowy trekking 10km i punkt widokowy" },
+                { id: 4, name: "Lago di Dobbiaco & Prato Piazza", coords: [46.7231, 12.2183], desc: "Relaks rowerowy, piknik i łąki Prato Piazza" },
+                { id: 6, name: "Seceda (Col Raiser)", coords: [46.5982, 11.7247], desc: "Kolejka górska, spektakularne klify i schroniska" },
+                { id: 7, name: "Stawy Kąpielowe Dobbiaco", coords: [46.728, 12.222], desc: "Pełen chillout wodny za 5€" },
+                { id: 8, name: "Lago di Sorapis", coords: [46.5559, 12.1673], desc: "Start rano przed 7:00! Turkusowa woda" },
+                { id: 9, name: "San Candido - Cortina d'Ampezzo", coords: [46.5405, 12.1357], desc: "Rowerowa trasa Lunga via delle Dolomiti" }
+            ];
+
+            // Add markers
+            destinations.forEach(dest => {
+                const marker = L.marker(dest.coords).addTo(map)
+                    .bindPopup(`<b>Dzień ${dest.id === 4 ? '4-5' : dest.id}: ${dest.name}</b><br>${dest.desc}`);
+                markers[dest.id] = marker;
+            });
+        }
+
+        // Focus map zoom helper
+        function focusMap(lat, lng, zoom, dayId) {
+            if (map) {
+                map.setView([lat, lng], zoom);
+                if (markers[dayId]) {
+                    markers[dayId].openPopup();
+                }
+                
+                // Visual feedback in DOM
+                document.querySelectorAll('.day-card').forEach(card => {
+                    card.classList.remove('ring-2', 'ring-emerald-500', 'ring-offset-2');
+                });
+                const activeCard = document.getElementById(`day-${dayId}-anchor`);
+                if (activeCard) {
+                    activeCard.classList.add('ring-2', 'ring-emerald-500', 'ring-offset-2');
+                    activeCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+        }
+
+        // Filter Timeline Days
+        function filterDays(type) {
+            // Update filter buttons states
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('bg-slate-900', 'text-white');
+                btn.classList.add('bg-white', 'text-slate-600', 'border', 'border-slate-200');
+            });
+            event.target.classList.remove('bg-white', 'text-slate-600', 'border-slate-200');
+            event.target.classList.add('bg-slate-900', 'text-white');
+
+            // Show/hide cards
+            document.querySelectorAll('.day-card').forEach(card => {
+                if (type === 'all' || card.getAttribute('data-type') === type) {
+                    card.classList.remove('hidden');
+                } else {
+                    card.classList.add('hidden');
+                }
+            });
+        }
+
+        // Update Weekdays based on User Start Date input
+        const polishWeekdays = ["Niedziela", "Poniedziałek", "Wtorek", "Środa", "Czwartek", "Piątek", "Sobota"];
+        function updateTripDates() {
+            const inputDateVal = document.getElementById('tripStartDate').value;
+            if (!inputDateVal) return;
+
+            const baseDate = new Date(inputDateVal);
+            document.querySelectorAll('.dynamic-day-name').forEach(el => {
+                const offset = parseInt(el.getAttribute('data-day-offset'), 10);
+                const targetDate = new Date(baseDate);
+                targetDate.setDate(baseDate.getDate() + offset);
+
+                const formattedDate = targetDate.toLocaleDateString('pl-PL', {
+                    day: 'numeric',
+                    month: 'long'
+                });
+                const dayOfWeek = polishWeekdays[targetDate.getDay()];
+                
+                el.innerHTML = `Dzień ${offset + 1} — ${dayOfWeek}, ${formattedDate}`;
+            });
+
+            // Refresh Countdown base date
+            countdownTargetDate = baseDate;
+            saveTripStartDate(inputDateVal);
+        }
+
+        // Local Storage handles for Trip Start Date
+        function saveTripStartDate(dateString) {
+            localStorage.setItem('dolomity_start_date', dateString);
+        }
+
+        function loadTripStartDate() {
+            const saved = localStorage.getItem('dolomity_start_date');
+            if (saved) {
+                document.getElementById('tripStartDate').value = saved;
+            }
+        }
+
+        // Packing List Interactive Checks
+        function togglePackItem(element) {
+            const checkbox = element.querySelector('input[type="checkbox"]');
+            if (event.target !== checkbox) {
+                checkbox.checked = !checkbox.checked;
+            }
+            savePackingState();
+        }
+
+        function savePackingState() {
+            const states = {};
+            document.querySelectorAll('input[type="checkbox"]').forEach(box => {
+                states[box.id] = box.checked;
+            });
+            localStorage.setItem('dolomity_packing_states', JSON.stringify(states));
+        }
+
+        function loadPackingState() {
+            const saved = localStorage.getItem('dolomity_packing_states');
+            if (saved) {
+                const states = JSON.parse(saved);
+                Object.keys(states).forEach(id => {
+                    const box = document.getElementById(id);
+                    if (box) box.checked = states[id];
+                });
+            }
+        }
+
+        // Live Countdown Clock
+        let countdownTargetDate = new Date("2026-07-15T08:00:00");
+        function updateCountdown() {
+            const now = new Date().getTime();
+            const difference = countdownTargetDate.getTime() - now;
+
+            if (difference < 0) {
+                document.getElementById('days').innerText = "00";
+                document.getElementById('hours').innerText = "00";
+                document.getElementById('minutes').innerText = "00";
+                document.getElementById('seconds').innerText = "00";
+                return;
+            }
+
+            const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+
+            document.getElementById('days').innerText = String(days).padStart(2, '0');
+            document.getElementById('hours').innerText = String(hours).padStart(2, '0');
+            document.getElementById('minutes').innerText = String(minutes).padStart(2, '0');
+            document.getElementById('seconds').innerText = String(seconds).padStart(2, '0');
+        }
+
+        // Initializer
+        window.onload = function () {
+            loadTripStartDate();
+            updateTripDates();
+            initMap();
+            loadPackingState();
+            
+            // Start real-time countdown
+            updateCountdown();
+            setInterval(updateCountdown, 1000);
+        };
+    </script>
+</body>
+</html>
